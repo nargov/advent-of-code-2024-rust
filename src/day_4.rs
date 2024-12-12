@@ -5,11 +5,36 @@ pub fn calc1() -> i32 {
     word_count("XMAS", &matrix)
 }
 
+pub fn calc2() -> i32 {
+    let matrix: Vec<Vec<char>> = read_matrix();
+    mas_count(&matrix)
+}
+
+fn mas_count(matrix: &Vec<Vec<char>>) -> i32 {
+    let mut result = 0;
+    if matrix.len() < 3 {
+        return result
+    }
+
+    for i in 1..matrix.len() - 1 {
+        for j in 1..matrix[i].len() - 1 {
+            if matrix[i][j] == 'A' {
+                let diags = vec![matrix[i - 1][j - 1], matrix[i - 1][j + 1], matrix[i + 1][j + 1], matrix[i + 1][j - 1]];
+                let diags_word = String::from_iter(diags);
+                if diags_word == "MSSM" || diags_word == "SSMM" || diags_word == "MMSS" || diags_word == "SMMS" {
+                    result += 1;
+                }
+            }
+        }
+    }
+    result
+}
+
 fn word_count(word: &str, matrix: &Vec<Vec<char>>) -> i32 {
     let chars = word.chars().collect::<Vec<char>>();
     let mut result = 0;
-    for i in 0 .. matrix.len() {
-        for j in 0 .. matrix[i].len() {
+    for i in 0..matrix.len() {
+        for j in 0..matrix[i].len() {
             if matrix[i][j] == chars[0] {
                 if check(&chars, matrix, i, j, 1, 0) {
                     result += 1;
@@ -41,7 +66,14 @@ fn word_count(word: &str, matrix: &Vec<Vec<char>>) -> i32 {
     result
 }
 
-fn check(chars: &Vec<char>, matrix: &Vec<Vec<char>>, i: usize, j: usize, dir_horizontal: i32, dir_vertical: i32) -> bool {
+fn check(
+    chars: &Vec<char>,
+    matrix: &Vec<Vec<char>>,
+    i: usize,
+    j: usize,
+    dir_horizontal: i32,
+    dir_vertical: i32,
+) -> bool {
     if chars.len() > matrix[0].len() - j && dir_horizontal == 1 {
         return false;
     }
@@ -54,7 +86,7 @@ fn check(chars: &Vec<char>, matrix: &Vec<Vec<char>>, i: usize, j: usize, dir_hor
     if chars.len() > i + 1 && dir_vertical == -1 {
         return false;
     }
-    
+
     for x in 0..chars.len() {
         let x_pos = j as i32 + (x as i32 * dir_horizontal);
         let y_pos = i as i32 + (x as i32 * dir_vertical);
@@ -76,13 +108,13 @@ fn read_matrix() -> Vec<Vec<char>> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    
+
     #[test]
     fn returns_zero_for_empty_matrix() {
         let matrix: Vec<Vec<char>> = Vec::new();
         assert_eq!(word_count("XMAS", &matrix), 0);
     }
-    
+
     #[test]
     fn returns_one_for_horizontal() {
         let matrix: Vec<Vec<char>> = vec![vec!['X', 'M', 'A', 'S']];
@@ -94,13 +126,13 @@ mod tests {
         let matrix: Vec<Vec<char>> = vec![vec!['X', 'M', 'A', 'G']];
         assert_eq!(word_count("XMAS", &matrix), 0);
     }
-    
+
     #[test]
     fn returns_zero_for_horizontal_beyond_right_edge() {
         let matrix: Vec<Vec<char>> = vec![vec!['X', 'M', 'A']];
         assert_eq!(word_count("XMAS", &matrix), 0);
     }
-    
+
     #[test]
     fn returns_one_for_horizontal_reversed() {
         let matrix: Vec<Vec<char>> = vec![vec!['S', 'A', 'M', 'X']];
@@ -109,23 +141,13 @@ mod tests {
 
     #[test]
     fn returns_one_for_vertical() {
-        let matrix: Vec<Vec<char>> = vec![
-            vec!['X'],
-            vec!['M'],
-            vec!['A'],
-            vec!['S'],
-        ];
+        let matrix: Vec<Vec<char>> = vec![vec!['X'], vec!['M'], vec!['A'], vec!['S']];
         assert_eq!(word_count("XMAS", &matrix), 1);
     }
 
     #[test]
     fn returns_one_for_vertical_reversed() {
-        let matrix: Vec<Vec<char>> = vec![
-            vec!['S'],
-            vec!['A'],
-            vec!['M'],
-            vec!['X'],
-        ];
+        let matrix: Vec<Vec<char>> = vec![vec!['S'], vec!['A'], vec!['M'], vec!['X']];
         assert_eq!(word_count("XMAS", &matrix), 1);
     }
     #[test]
@@ -169,5 +191,51 @@ mod tests {
             vec!['X', '.', '.', '.'],
         ];
         assert_eq!(word_count("XMAS", &matrix), 1);
+    }
+
+    #[test]
+    fn returns_zero_for_empty() {
+        let matrix: Vec<Vec<char>> = Vec::new();
+        assert_eq!(mas_count(&matrix), 0);
+    }
+
+    #[test]
+    fn returns_one_for_simple_x() {
+        let matrix: Vec<Vec<char>> = vec![
+            vec!['M', '.', 'S'],
+            vec!['.', 'A', '.'],
+            vec!['M', '.', 'S'],
+        ];
+        assert_eq!(mas_count(&matrix), 1);
+    }
+
+    #[test]
+    fn returns_one_for_inverted_diag() {
+        let matrix: Vec<Vec<char>> = vec![
+            vec!['S', '.', 'S'],
+            vec!['.', 'A', '.'],
+            vec!['M', '.', 'M'],
+        ];
+        assert_eq!(mas_count(&matrix), 1);
+    }
+
+    #[test]
+    fn returns_one_for_inverted_lower_diag() {
+        let matrix: Vec<Vec<char>> = vec![
+            vec!['M', '.', 'M'],
+            vec!['.', 'A', '.'],
+            vec!['S', '.', 'S'],
+        ];
+        assert_eq!(mas_count(&matrix), 1);
+    }
+
+    #[test]
+    fn returns_one_for_both_diags_inverted() {
+        let matrix: Vec<Vec<char>> = vec![
+            vec!['S', '.', 'M'],
+            vec!['.', 'A', '.'],
+            vec!['S', '.', 'M'],
+        ];
+        assert_eq!(mas_count(&matrix), 1);
     }
 }
